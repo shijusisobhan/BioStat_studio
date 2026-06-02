@@ -44,8 +44,8 @@ For each numeric parameter:
 |--------------|------|
 | p > 0.05 | NS |
 | p ≤ 0.05 | * |
-| p ≤ 0.009 | ** |
-| p ≤ 0.0009 | *** |
+| p ≤ 0.0099 | ** |
+| p ≤ 0.00099 | *** |
 
 ---
 
@@ -113,10 +113,3 @@ For each parameter:
 - No assumption of equal group sizes required
 
 ---
-
-# 🖥️ How to run locally
-
-## 1. Clone repository
-```bash
-git clone https://github.com/your-username/anova-explorer.git
-cd anova-explorer
