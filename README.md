@@ -1,4 +1,3 @@
-# BioStat_studio
 
 # 🧬 ANOVA Explorer – Genotype Analysis & Visualization Tool
 
@@ -12,7 +11,7 @@ This app generates **publication-ready figures** and performs **one-way ANOVA co
 
 Once deployed on Streamlit Cloud:
 
-👉 https://your-app-name.streamlit.app
+👉 [https://your-app-name.streamlit.app](https://anovaexplorer.streamlit.app/)
 
 ---
 
