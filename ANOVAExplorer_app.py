@@ -1,18 +1,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
-import re
 import matplotlib.pyplot as plt
-import zipfile
+import re
 from io import BytesIO
+import zipfile
 
 from scipy.stats import f_oneway, sem
 from matplotlib import cm
 
 st.set_page_config(page_title="ANOVA Explorer", layout="wide")
 
-st.title("🧬 ANOVA Explorer (Genotype Analysis Tool)")
+st.title("🧬 ANOVA Explorer (Publication-Ready Stats Tool)")
 
 
 # ---------------- Helper functions ----------------
@@ -28,6 +27,7 @@ def significance_label(p):
 
 
 def add_significance_bar(ax, x1, x2, y, h, text):
+
     ax.plot([x1, x1, x2, x2],
             [y, y + h, y + h, y],
             lw=1.5,
@@ -41,7 +41,7 @@ def add_significance_bar(ax, x1, x2, y, h, text):
             fontsize=12)
 
 
-# ---------------- Upload file ----------------
+# ---------------- Upload ----------------
 uploaded_file = st.file_uploader("📂 Upload Excel File", type=["xlsx"])
 
 if uploaded_file:
@@ -49,7 +49,7 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     if "Genotype" not in df.columns:
-        st.error("Column 'Genotype' not found in file.")
+        st.error("Missing 'Genotype' column.")
         st.stop()
 
     genotypes = sorted(df["Genotype"].dropna().unique().tolist())
@@ -63,38 +63,34 @@ if uploaded_file:
     with col2:
         ctrl_group = st.multiselect("⚖️ Control Group", genotypes)
 
-    # prevent overlap
     overlap = set(exp_group).intersection(ctrl_group)
+
     if overlap:
         st.error(f"Overlap detected: {', '.join(overlap)}")
         st.stop()
 
-    # ---------------- Output folder ----------------
-    folder_name = st.text_input("📁 Results Folder Name", "anova_results")
-
     run = st.button("🚀 Run ANOVA")
 
-    # ---------------- Run analysis ----------------
+    # ---------------- Run ----------------
     if run:
 
         if len(exp_group) == 0 or len(ctrl_group) == 0:
-            st.error("Select both experimental and control groups.")
+            st.error("Select both groups.")
             st.stop()
-
-        output_dir = os.path.join(os.getcwd(), folder_name)
-        os.makedirs(output_dir, exist_ok=True)
 
         numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
         results = []
+        all_figures = {}
 
-        # color map for controls
+        # color mapping
         control_colors = {}
         palette = list(cm.tab10.colors) + list(cm.Set2.colors)
 
         for i, ctrl in enumerate(ctrl_group):
             control_colors[ctrl] = palette[i % len(palette)]
 
+        # ---------------- LOOP PARAMETERS ----------------
         for param in numeric_cols:
 
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -103,7 +99,7 @@ if uploaded_file:
             plot_means = []
             plot_sem = []
 
-            # ---------------- summary stats ----------------
+            # summary stats
             for g in exp_group + ctrl_group:
 
                 vals = df[df["Genotype"] == g][param].dropna()
@@ -118,13 +114,11 @@ if uploaded_file:
             if len(plot_means) == 0:
                 continue
 
-            # ---------------- bar colors ----------------
-            bar_colors = []
-            for g in plot_labels:
-                if g in exp_group:
-                    bar_colors.append("lightgray")
-                else:
-                    bar_colors.append(control_colors[g])
+            # colors
+            bar_colors = [
+                "lightgray" if g in exp_group else control_colors[g]
+                for g in plot_labels
+            ]
 
             ax.bar(plot_labels,
                    plot_means,
@@ -134,7 +128,7 @@ if uploaded_file:
                    edgecolor="black",
                    linewidth=1.2)
 
-            # ---------------- scatter individual points ----------------
+            # individual points
             for i, g in enumerate(plot_labels):
 
                 vals = df[df["Genotype"] == g][param].dropna()
@@ -148,7 +142,7 @@ if uploaded_file:
                            alpha=0.7,
                            zorder=10)
 
-            # ---------------- stats ----------------
+            # stats
             ymax = max(plot_means)
             sig_level = 0
 
@@ -193,47 +187,55 @@ if uploaded_file:
 
             plt.tight_layout()
 
-            # ---------------- safe filename ----------------
+            # safe filename
             safe_name = re.sub(r'[^A-Za-z0-9_.-]', '_', str(param))
             safe_name = re.sub(r'_+', '_', safe_name).strip('_')
 
-            # save figure
-            fig_path = os.path.join(output_dir, f"{safe_name}.png")
-            fig.savefig(fig_path, dpi=300)
+            # save figure to memory
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+            buf.seek(0)
 
             st.pyplot(fig)
 
-            zip_buffer = BytesIO()
-
-            with zipfile.ZipFile(zip_buffer, "w") as zipf:
-
-                for file in os.listdir(output_dir):
-                    if file.endswith(".png"):
-                        zipf.write(
-                            os.path.join(output_dir, file),
-                            arcname=file
-                        )
-
-            zip_buffer.seek(0)
-
             st.download_button(
-                label="📦 Download All Figures (ZIP)",
-                data=zip_buffer,
-                file_name="anova_figures.zip",
-                mime="application/zip"
+                label=f"📥 Download {safe_name}.png",
+                data=buf,
+                file_name=f"{safe_name}.png",
+                mime="image/png",
+                key=f"dl_{safe_name}"
             )
 
-        # ---------------- save results ----------------
+            all_figures[f"{safe_name}.png"] = buf.getvalue()
+
+        # ---------------- RESULTS EXCEL ----------------
         results_df = pd.DataFrame(results)
 
-        excel_path = os.path.join(output_dir, "anova_results.xlsx")
-        results_df.to_excel(excel_path, index=False)
+        excel_buffer = BytesIO()
+        results_df.to_excel(excel_buffer, index=False, engine="openpyxl")
+        excel_buffer.seek(0)
 
-        st.success(f"Results saved in: {output_dir}")
+        st.download_button(
+            label="📊 Download ANOVA Results (Excel)",
+            data=excel_buffer,
+            file_name="anova_results.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-        with open(excel_path, "rb") as f:
-            st.download_button(
-                "📥 Download ANOVA Results",
-                f,
-                file_name="anova_results.xlsx"
-            )
+        # ---------------- ZIP FILE ----------------
+        zip_buffer = BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, "w") as zipf:
+            for fname, fbytes in all_figures.items():
+                zipf.writestr(fname, fbytes)
+
+        zip_buffer.seek(0)
+
+        st.download_button(
+            label="📦 Download All Figures (ZIP)",
+            data=zip_buffer,
+            file_name="anova_figures.zip",
+            mime="application/zip"
+        )
+
+        st.success("Analysis complete 🎉")
