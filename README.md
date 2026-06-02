@@ -11,7 +11,7 @@ This app generates **publication-ready figures** and performs **one-way ANOVA co
 
 Once deployed on Streamlit Cloud:
 
-👉 [https://your-app-name.streamlit.app](https://anovaexplorer.streamlit.app/)
+👉 [Click here to Launch the app](https://anovaexplorer.streamlit.app/)
 
 ---
 
