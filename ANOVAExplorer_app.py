@@ -18,9 +18,9 @@ st.title("🧬 ANOVA Explorer (Publication-Ready Stats Tool)")
 def significance_label(p):
     if p >= 0.05:
         return "NS"
-    elif p >= 0.009:
+    elif p >= 0.0099:
         return "*"
-    elif p >= 0.0009:
+    elif p >= 0.00099:
         return "**"
     else:
         return "***"
