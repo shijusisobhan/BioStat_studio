@@ -4,6 +4,8 @@ import numpy as np
 import os
 import re
 import matplotlib.pyplot as plt
+import zipfile
+from io import BytesIO
 
 from scipy.stats import f_oneway, sem
 from matplotlib import cm
@@ -200,6 +202,26 @@ if uploaded_file:
             fig.savefig(fig_path, dpi=300)
 
             st.pyplot(fig)
+
+            zip_buffer = BytesIO()
+
+            with zipfile.ZipFile(zip_buffer, "w") as zipf:
+
+                for file in os.listdir(output_dir):
+                    if file.endswith(".png"):
+                        zipf.write(
+                            os.path.join(output_dir, file),
+                            arcname=file
+                        )
+
+            zip_buffer.seek(0)
+
+            st.download_button(
+                label="📦 Download All Figures (ZIP)",
+                data=zip_buffer,
+                file_name="anova_figures.zip",
+                mime="application/zip"
+            )
 
         # ---------------- save results ----------------
         results_df = pd.DataFrame(results)
