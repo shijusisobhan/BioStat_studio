@@ -33,15 +33,12 @@ def add_significance_bar(ax, x1, x2, y, h, text):
             lw=1.5,
             c="black")
 
-ax.text(
-    (x1 + x2) / 2,
-    y + h + ymax * 0.02,
-    text,
-    ha="center",
-    va="bottom",
-    fontsize=12,
-    fontweight="bold"
-)
+    ax.text((x1 + x2) / 2,
+            y + h,
+            text,
+            ha="center",
+            va="bottom",
+            fontsize=12)
 
 
 # ---------------- Upload ----------------
