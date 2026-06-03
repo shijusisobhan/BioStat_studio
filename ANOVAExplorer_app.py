@@ -34,7 +34,7 @@ def add_significance_bar(ax, x1, x2, y, h, text):
             c="black")
 
     ax.text((x1 + x2) / 2,
-            y + h,
+            y + h + ymax*0.02,
             text,
             ha="center",
             va="bottom",
@@ -149,7 +149,7 @@ if uploaded_file:
             base_height = ymax * 1.20
 
             # distance between significance bars
-            step_height = ymax * 0.12
+            step_height = ymax * 0.15
 
             sig_level = 0
 
