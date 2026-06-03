@@ -33,12 +33,15 @@ def add_significance_bar(ax, x1, x2, y, h, text):
             lw=1.5,
             c="black")
 
-    ax.text((x1 + x2) / 2,
-            y + h,
-            text,
-            ha="center",
-            va="bottom",
-            fontsize=12)
+ax.text(
+    (x1 + x2) / 2,
+    y + h + ymax * 0.02,
+    text,
+    ha="center",
+    va="bottom",
+    fontsize=12,
+    fontweight="bold"
+)
 
 
 # ---------------- Upload ----------------
@@ -144,6 +147,13 @@ if uploaded_file:
 
             # stats
             ymax = max(plot_means)
+
+            # space above tallest bar
+            base_height = ymax * 1.20
+
+            # distance between significance bars
+            step_height = ymax * 0.12
+
             sig_level = 0
 
             for exp in exp_group:
@@ -175,15 +185,18 @@ if uploaded_file:
                     x1 = plot_labels.index(exp)
                     x2 = plot_labels.index(ctrl)
 
-                    y = ymax * (1.10 + sig_level * 0.08)
+                    y = base_height + (sig_level * step_height)
 
-                    add_significance_bar(ax, x1, x2, y, ymax * 0.03, sig)
+                    add_significance_bar(ax, x1, x2, y, ymax * 0.05, sig)
 
                     sig_level += 1
 
             ax.set_title(param)
             ax.set_ylabel(param)
             ax.set_xticklabels(plot_labels, rotation=45, ha="right")
+            ax.set_ylim(
+                top=base_height + (sig_level + 2) * step_height
+            )
 
             plt.tight_layout()
 
