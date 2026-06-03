@@ -149,7 +149,7 @@ if uploaded_file:
             base_height = ymax * 1.20
 
             # distance between significance bars
-            step_height = ymax * 0.15
+            step_height = ymax * 0.2
 
             sig_level = 0
 
